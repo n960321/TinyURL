@@ -1,0 +1,28 @@
+@startuml
+Actor User as user
+collections Server as server
+collections Cache as cache
+database Database as db
+
+
+user -> server : Send shortening request
+
+
+group Exist in Cache 
+    server -> cache : Check the url exist in the cache.
+    cache -> user : If exist, reponse the short url.
+
+end
+
+group Exist in DB but not in Cache 
+    server -> db : Query the url in the db.
+    server -> cache: If exist, save in cache.
+    server -> user: Reponse the short url.
+end
+
+
+server -> db: Generated the short URL and store in db
+server -> user: Reponse the short URL.
+
+
+@enduml
