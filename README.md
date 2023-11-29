@@ -103,31 +103,26 @@ TBD…
     | --- | --- |
     | url_key | The shortened URL. |
 - **Request Flow**
-    ```mermaid
-        zenuml
-            title Shortening Request Flow
 
-        @Actor User
-        Server
-        @Database Cache
-        @Database DB
-
-
-        User -> Server : Send shortening request
-
-        if (Exist in Cache) {
-            Server -> Cache : Check the url exist in the cache.
-            Cache -> User : If exist, reponse the short url.
-        }else if (Exist in DB) {
-            Server -> DB : Query the url in the db.
-            Server -> Cache: If exist, save in cache.
-            Server -> User: Reponse the short url.
-        }
-
-        Server -> DB: Generated the short URL and store in db
-        Server -> User: Reponse the short URL.
-
-    ```
+```mermaid
+    zenuml
+        title Shortening Request Flow
+    @Actor User
+    Server
+    @Database Cache
+    @Database DB
+    User -> Server : Send shortening request
+    if (Exist in Cache) {
+        Server -> Cache : Check the url exist in the cache.
+        Cache -> User : If exist, reponse the short url.
+    }else if (Exist in DB) {
+        Server -> DB : Query the url in the db.
+        Server -> Cache: If exist, save in cache.
+        Server -> User: Reponse the short url.
+    }
+    Server -> DB: Generated the short URL and store in db
+    Server -> User: Reponse the short URL.
+```
 
 - **Question**
     1. 假設對短網址在做一次短網址應該要怎麼處理？
@@ -151,29 +146,24 @@ TBD…
     | url | The original URL. |
 - **Request Flow**
     
-    ```mermaid
-        zenuml
-            title Redirection Request Flow
-
-        @Actor user 
-        server
-        @Database cache
-        @Database db
-
-
-        user -> server : Send redirection request
-
-        if (Exist in Cache) {
-            server -> cache : Check the url_key exist in the cache.
-            cache -> user : If exist, reponse the original url.
-        }else if (Exist in Database) {
-            server -> db : Query the url_key in the db.
-            server -> cache: If exist, save in cache.
-            server -> user: Reponse the original url.
-        }
-
-        server -> user: Reponse do not exist.
-    ```
+```mermaid
+    zenuml
+        title Redirection Request Flow
+    @Actor user 
+    server
+    @Database cache
+    @Database db
+    user -> server : Send redirection request
+    if (Exist in Cache) {
+        server -> cache : Check the url_key exist in the cache.
+        cache -> user : If exist, reponse the original url.
+    }else if (Exist in Database) {
+        server -> db : Query the url_key in the db.
+        server -> cache: If exist, save in cache.
+        server -> user: Reponse the original url.
+    }
+    server -> user: Reponse do not exist.
+```
 
 
 # Encoder Detail
