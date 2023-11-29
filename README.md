@@ -4,12 +4,15 @@
 
 # Functional Requirements
 
+## Phase 1
 1. 能夠把長的網址變成短網址
 2. 能夠把短網址轉成長網址
-3. 自訂短網址
-4. 刪除短網址
-5. 更新短網址
-6. 短網址過期時間
+3. 短網址過期時間
+
+## Phase 2
+1. 自訂短網址
+2. 刪除短網址
+3. 更新短網址
 
 # Non-functional Requirements
 
