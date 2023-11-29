@@ -105,23 +105,23 @@ TBD…
 - **Request Flow**
 
 ```mermaid
-    zenuml
+    sequenceDiagram
         title Shortening Request Flow
-    @Actor User
-    Server
-    @Database Cache
-    @Database DB
-    User -> Server : Send shortening request
-    if (Exist in Cache) {
-        Server -> Cache : Check the url exist in the cache.
-        Cache -> User : If exist, reponse the short url.
-    }else if (Exist in DB) {
-        Server -> DB : Query the url in the db.
-        Server -> Cache: If exist, save in cache.
-        Server -> User: Reponse the short url.
-    }
-    Server -> DB: Generated the short URL and store in db
-    Server -> User: Reponse the short URL.
+    actor User
+    participant Server
+    participant Cache
+    participant DB
+    User ->> Server : Send shortening request
+    alt Exist in Cache 
+        Server ->> Cache : Check the url exist in the cache.
+        Cache ->> User : If exist, reponse the short url.
+    else Exist in DB but not in Cache
+        Server ->> DB : Query the url in the db.
+        Server ->> Cache: If exist, save in cache.
+        Server ->> User: Reponse the short url.
+    end
+    Server ->> DB: Generated the short URL and store in db
+    Server ->> User: Reponse the short URL.
 ```
 
 - **Question**
@@ -147,22 +147,23 @@ TBD…
 - **Request Flow**
     
 ```mermaid
-    zenuml
+    sequenceDiagram
         title Redirection Request Flow
-    @Actor user 
-    server
-    @Database cache
-    @Database db
-    user -> server : Send redirection request
-    if (Exist in Cache) {
-        server -> cache : Check the url_key exist in the cache.
-        cache -> user : If exist, reponse the original url.
-    }else if (Exist in Database) {
-        server -> db : Query the url_key in the db.
-        server -> cache: If exist, save in cache.
-        server -> user: Reponse the original url.
-    }
-    server -> user: Reponse do not exist.
+    actor User 
+    participant Server
+    participant Cache
+    participant DB
+    
+    User ->> Server : Send redirection request
+    alt Exist in Cache
+        Server -> Cache : Check the url_key exist in the cache.
+        Cache -> User : If exist, reponse the original url.
+    else Exist in Database but not in Cache
+        Server ->> DB : Query the url_key in the db.
+        Server ->> Cache: If exist, save in cache.
+        Server ->> User: Reponse the original url.
+    end
+    Server ->> User: Reponse url_key do not exist.
 ```
 
 
