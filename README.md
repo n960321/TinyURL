@@ -204,3 +204,4 @@ TBD…
 
 # REF
 [Educative - System Design TinyURL](https://www.educative.io/courses/grokking-modern-system-design-interview-for-engineers-managers/system-design-tinyurl)
+[Golang Strandard Project Layout](https://github.com/golang-standards/project-layout)
