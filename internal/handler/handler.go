@@ -2,18 +2,21 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
-	"tinyurl/pkg/base58"
+	"tinyurl/internal/service"
 
 	"github.com/gorilla/mux"
 )
 
-type Handler struct{}
+type Handler struct {
+	svc service.URLGenerateServicer
+}
 
 func NewHandler() *Handler {
-	return &Handler{}
+	return &Handler{
+		svc: service.NewURLGenerateService(),
+	}
 }
 
 func (h *Handler) GetRouter() *mux.Router {
@@ -26,12 +29,13 @@ func (h *Handler) GetRouter() *mux.Router {
 	return r
 }
 
-
-
 type CreateReq struct {
 	Url string `json:"url"`
 }
 
+type CreateResp struct {
+	UrlKey string `json:"url_key"`
+}
 
 func (h *Handler) create(rw http.ResponseWriter, req *http.Request) {
 	var createReq CreateReq
@@ -41,32 +45,49 @@ func (h *Handler) create(rw http.ResponseWriter, req *http.Request) {
 		log.Printf("unmarshall req failed, err: %v", err)
 		return
 	}
+	log.Printf("createReq: %+v\n", createReq)
 
-	fmt.Printf("createReq: %+v\n", createReq)
+	urlKey := h.svc.CreateShortenedURL(createReq.Url)
+	resp := CreateResp{UrlKey: urlKey}
+	rw.WriteHeader(http.StatusOK)
+	respBody, err := json.Marshal(resp)
+	if err != nil {
+		log.Printf("marshal failed, err: %v", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	rw.Write(respBody)
 }
 
 func (h *Handler) redirection(rw http.ResponseWriter, req *http.Request) {
 	v := mux.Vars(req)
 	urlKey := v["url_key"]
 
-	decodeValue, err := base58.DecodeToInt(urlKey)
-	if err != nil {
-		log.Printf("the url_key is invaild, err:%v \n", err)
-		return
-	}
+	// TODO: check existing in cache
+	url := h.svc.GetShortenedURL(urlKey)
+	http.Redirect(rw, req, url, http.StatusSeeOther)
+}
 
-	fmt.Printf("decodeValue: %v\n", decodeValue)
-	http.Redirect(rw, req, "https://www.google.com", http.StatusSeeOther)
+type RedirectionWithHttpResp struct {
+	Url string `json:"url"`
 }
 
 func (h *Handler) redirectionWithHttpResp(rw http.ResponseWriter, req *http.Request) {
 	v := mux.Vars(req)
 	urlKey := v["url_key"]
 
-	decodeValue, err := base58.DecodeToInt(urlKey)
+	// TODO: check existing in cache
+	url := h.svc.GetShortenedURL(urlKey)
+
+	resp := RedirectionWithHttpResp{
+		Url: url,
+	}
+	respBody, err := json.Marshal(resp)
 	if err != nil {
-		log.Printf("the url_key is invaild, err:%v \n", err)
+		log.Printf("marshal failed, err:", err)
+		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	fmt.Printf("decodeValue: %v\n", decodeValue)
+
+	rw.Write(respBody)
 }
