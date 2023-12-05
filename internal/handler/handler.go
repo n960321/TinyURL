@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"tinyurl/internal/service"
+	"tinyurl/pkg/database"
 
 	"github.com/gorilla/mux"
 )
@@ -13,9 +14,9 @@ type Handler struct {
 	svc service.URLGenerateServicer
 }
 
-func NewHandler() *Handler {
+func NewHandler(db *database.Database) *Handler {
 	return &Handler{
-		svc: service.NewURLGenerateService(),
+		svc: service.NewURLGenerateService(db),
 	}
 }
 
@@ -47,7 +48,7 @@ func (h *Handler) create(rw http.ResponseWriter, req *http.Request) {
 	}
 	log.Printf("createReq: %+v\n", createReq)
 
-	urlKey := h.svc.CreateShortenedURL(createReq.Url)
+	urlKey := h.svc.CreateShortURL(createReq.Url)
 	resp := CreateResp{UrlKey: urlKey}
 	rw.WriteHeader(http.StatusOK)
 	respBody, err := json.Marshal(resp)
@@ -64,7 +65,7 @@ func (h *Handler) redirection(rw http.ResponseWriter, req *http.Request) {
 	urlKey := v["url_key"]
 
 	// TODO: check existing in cache
-	url := h.svc.GetShortenedURL(urlKey)
+	url := h.svc.GetShortURL(urlKey)
 	http.Redirect(rw, req, url, http.StatusSeeOther)
 }
 
@@ -77,7 +78,7 @@ func (h *Handler) redirectionWithHttpResp(rw http.ResponseWriter, req *http.Requ
 	urlKey := v["url_key"]
 
 	// TODO: check existing in cache
-	url := h.svc.GetShortenedURL(urlKey)
+	url := h.svc.GetShortURL(urlKey)
 
 	resp := RedirectionWithHttpResp{
 		Url: url,

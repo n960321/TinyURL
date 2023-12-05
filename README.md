@@ -199,6 +199,10 @@ TBD…
 
 由此可知，用不完。
 
+但如果我們存在 Postgres 裡，以bigserial的型態儲存 最長就只有 2<sup>64-1</sup>，在算算這樣能用多久。
+(2<sup>64-1</sup> - 10<sup>9</sup>) / 2.4 billion = 3,843,071,681.6 年
+
+OK，也是非常夠用。
 
 
 
@@ -208,3 +212,7 @@ TBD…
 [Golang Strandard Project Layout](https://github.com/golang-standards/project-layout)
 
 [Base58 Encode/Decode Online](https://www.dcode.fr/base-58-cipher)
+
+[Educative - Design of a Unique ID Generator](https://www.educative.io/courses/grokking-modern-system-design-interview-for-engineers-managers/design-of-a-unique-id-generator)
+
+[Golang-migrate](https://github.com/golang-migrate/migrate)

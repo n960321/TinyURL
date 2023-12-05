@@ -7,14 +7,17 @@ import (
 	"os/signal"
 	"time"
 	"tinyurl/internal/handler"
+	"tinyurl/pkg/database"
 	"tinyurl/pkg/server"
 )
 
 func main() {
+	db := database.NewDatabase()
+	
 	svr := server.NewServer(&server.ServerConfig{
 		Address: "0.0.0.0",
 		Port:    "8000",
-	}, handler.NewHandler().GetRouter())
+	}, handler.NewHandler(db).GetRouter())
 
 	svr.Listen()
 
