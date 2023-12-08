@@ -23,7 +23,9 @@ func NewDatabase() *Database {
 	}
 
 	if err := m.Up(); err != nil {
-		log.Panicf("Migrate failed, err %v", err)
+		if err != migrate.ErrNoChange {
+			log.Panicf("Migrate failed, err %v", err)
+		}
 	}
 	dsn := "host=localhost user=postgres password=admin dbname=postgres port=5432 sslmode=disable"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})

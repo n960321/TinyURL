@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/btcsuite/btcd/btcutil v1.1.3
+	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/golang-migrate/migrate/v4 v4.16.2
 	github.com/gorilla/mux v1.8.1
 	gorm.io/driver/postgres v1.5.4

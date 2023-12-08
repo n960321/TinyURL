@@ -1,20 +1,21 @@
 package service
 
 import (
+	"encoding/json"
 	"log"
-	"tinyurl/pkg/base58"
+	"strconv"
+	"time"
 	"tinyurl/pkg/database"
+	"tinyurl/pkg/errors"
+	redispkg "tinyurl/pkg/redis"
 
+	"github.com/go-redis/redis"
 	"gorm.io/gorm"
 )
 
 type URLGenerateServicer interface {
-	CreateShortURL(url string) (urlKey string)
-	GetShortURL(urlKey string) (url string)
-}
-
-type URLGenerateService struct {
-	DB *database.Database
+	CreateURLInfo(urlInfo *UrlInfo) (*UrlInfo, error)
+	GetURLInfo(id int) (*UrlInfo, error)
 }
 
 type UrlInfo struct {
@@ -22,35 +23,76 @@ type UrlInfo struct {
 	URL string
 }
 
-func NewURLGenerateService(db *database.Database) *URLGenerateService {
-	return &URLGenerateService{DB: db}
+func (i *UrlInfo) GetJson() string {
+	b, _ := json.Marshal(i)
+	return string(b)
 }
 
-func (s *URLGenerateService) CreateShortURL(url string) string {
-	urlInfo := UrlInfo{URL: url}
+type URLGenerateService struct {
+	db    *database.Database
+	cache *redispkg.RedisCache
+}
 
+func NewURLGenerateService(db *database.Database, cache *redispkg.RedisCache) *URLGenerateService {
+	return &URLGenerateService{
+		db:    db,
+		cache: cache,
+	}
+}
+
+func (s *URLGenerateService) CreateURLInfo(urlInfo *UrlInfo) (*UrlInfo, error) {
 	// 要有一個決定要序列產生器
 	// 目前交給DB做決定 直接auto increase
-	s.DB.Create(&urlInfo)
-	shortURL := base58.EncodeFromInt(int(urlInfo.ID))
-	// 得到後放進去DB 且檢查 cache 有沒有 如果有就砍掉
+	if val, err := s.cache.Get(urlInfo.URL).Result(); err == nil {
+		err := json.Unmarshal([]byte(val), urlInfo)
+		if err != nil {
+			log.Printf("CreateURLInfo : json Unmarshal failed, err: %v", err)
+		}
+	} else if err != redis.Nil {
+		log.Printf("CreateURLInfo : get data from cache failed, err: %v", err)
+	}
 
-	return shortURL
+	if err := s.db.Where(urlInfo).First(urlInfo).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			log.Printf("CreateURLInfo: Check url in DB failed, err: %v", err)
+		}
+	} else {
+		if err := s.cache.Set(urlInfo.URL, urlInfo.GetJson(), 1*time.Hour).Err(); err != nil {
+			log.Printf("CreateURLInfo : set data to cache failed, err: %v", err)
+		}
+		return urlInfo, nil
+	}
+
+	if err := s.db.Create(urlInfo).Error; err != nil {
+		return nil, err
+	}
+
+	return urlInfo, nil
 }
 
-func (s URLGenerateService) GetShortURL(urlKey string) string {
-
-	decodeValue, err := base58.DecodeToInt(urlKey)
-	if err != nil {
-		log.Printf("the url_key is invaild, err:%v \n", err)
-		return ""
-	}
+func (s URLGenerateService) GetURLInfo(id int) (*UrlInfo, error) {
 	urlInfo := &UrlInfo{}
-	log.Printf("decodeValue: %v\n", decodeValue)
-	r := s.DB.Where("id = ?",decodeValue).First(urlInfo)
-	if r.Error != nil {
-		return ""
+	if val, err := s.cache.Get(strconv.Itoa(id)).Result(); err == nil {
+		err := json.Unmarshal([]byte(val), urlInfo)
+		if err != nil {
+			log.Printf("GetURLInfo : json Unmarshal failed, err: %v", err)
+		} else {
+			return urlInfo, nil
+		}
+	} else if err != redis.Nil {
+		log.Printf("GetURLInfo : get data from cache failed, err: %v", err)
+	}
+	queryInfo := &UrlInfo{}
+	queryInfo.ID = uint(id)
+	if err := s.db.Where(queryInfo).First(urlInfo).Error; err == gorm.ErrRecordNotFound {
+		return nil, errors.ErrRecordNotFound
+	} else if err != nil {
+		return nil, err
 	}
 
-	return urlInfo.URL
+	if err := s.cache.Set(strconv.Itoa(id), urlInfo.GetJson(), 1*time.Hour).Err(); err != nil {
+		log.Printf("GetURLInfo : set data to cache failed, err: %v", err)
+	}
+
+	return urlInfo, nil
 }

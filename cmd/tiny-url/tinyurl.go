@@ -8,16 +8,20 @@ import (
 	"time"
 	"tinyurl/internal/handler"
 	"tinyurl/pkg/database"
+	"tinyurl/pkg/redis"
 	"tinyurl/pkg/server"
 )
 
 func main() {
 	db := database.NewDatabase()
-	
-	svr := server.NewServer(&server.ServerConfig{
-		Address: "0.0.0.0",
-		Port:    "8000",
-	}, handler.NewHandler(db).GetRouter())
+	redis := redis.NewRedisCache()
+	svr := server.NewServer(
+		&server.ServerConfig{
+			Address: "0.0.0.0",
+			Port:    "8000",
+		},
+		handler.NewHandler(db, redis).GetRouter(),
+	)
 
 	svr.Listen()
 

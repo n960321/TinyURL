@@ -5,7 +5,9 @@ import (
 	"log"
 	"net/http"
 	"tinyurl/internal/service"
+	"tinyurl/pkg/base58"
 	"tinyurl/pkg/database"
+	redispkg "tinyurl/pkg/redis"
 
 	"github.com/gorilla/mux"
 )
@@ -14,9 +16,9 @@ type Handler struct {
 	svc service.URLGenerateServicer
 }
 
-func NewHandler(db *database.Database) *Handler {
+func NewHandler(db *database.Database, cache *redispkg.RedisCache) *Handler {
 	return &Handler{
-		svc: service.NewURLGenerateService(db),
+		svc: service.NewURLGenerateService(db, cache),
 	}
 }
 
@@ -40,7 +42,7 @@ type CreateResp struct {
 
 func (h *Handler) create(rw http.ResponseWriter, req *http.Request) {
 	var createReq CreateReq
-
+	var resp = new(CreateResp)
 	err := json.NewDecoder(req.Body).Decode(&createReq)
 	if err != nil {
 		log.Printf("unmarshall req failed, err: %v", err)
@@ -48,8 +50,9 @@ func (h *Handler) create(rw http.ResponseWriter, req *http.Request) {
 	}
 	log.Printf("createReq: %+v\n", createReq)
 
-	urlKey := h.svc.CreateShortURL(createReq.Url)
-	resp := CreateResp{UrlKey: urlKey}
+	urlInfo := &service.UrlInfo{URL: createReq.Url}
+	urlInfo, err = h.svc.CreateURLInfo(urlInfo)
+	resp.UrlKey = base58.EncodeFromInt(int(urlInfo.ID))
 	rw.WriteHeader(http.StatusOK)
 	respBody, err := json.Marshal(resp)
 	if err != nil {
@@ -57,6 +60,7 @@ func (h *Handler) create(rw http.ResponseWriter, req *http.Request) {
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
+
 	rw.Write(respBody)
 }
 
@@ -64,9 +68,20 @@ func (h *Handler) redirection(rw http.ResponseWriter, req *http.Request) {
 	v := mux.Vars(req)
 	urlKey := v["url_key"]
 
-	// TODO: check existing in cache
-	url := h.svc.GetShortURL(urlKey)
-	http.Redirect(rw, req, url, http.StatusSeeOther)
+	id, err := base58.DecodeToInt(urlKey)
+	if err != nil {
+		rw.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	urlInfo, err := h.svc.GetURLInfo(id)
+	if err != nil {
+		log.Printf("redirection failed, err: %v", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(rw, req, urlInfo.URL, http.StatusSeeOther)
 }
 
 type RedirectionWithHttpResp struct {
@@ -76,19 +91,25 @@ type RedirectionWithHttpResp struct {
 func (h *Handler) redirectionWithHttpResp(rw http.ResponseWriter, req *http.Request) {
 	v := mux.Vars(req)
 	urlKey := v["url_key"]
-
-	// TODO: check existing in cache
-	url := h.svc.GetShortURL(urlKey)
-
-	resp := RedirectionWithHttpResp{
-		Url: url,
-	}
-	respBody, err := json.Marshal(resp)
+	resp := &RedirectionWithHttpResp{}
+	id, err := base58.DecodeToInt(urlKey)
 	if err != nil {
-		log.Printf("marshal failed, err:", err)
-		rw.WriteHeader(http.StatusInternalServerError)
+		rw.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
+	urlInfo, err := h.svc.GetURLInfo(id)
+	if err != nil {
+		log.Printf("redirection failed, err: %v", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	resp.Url = urlInfo.URL
+	respBody, err := json.Marshal(resp)
+	if err != nil {
+		log.Printf("marshal failed, err: %v", err)
+		rw.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	rw.Write(respBody)
 }
