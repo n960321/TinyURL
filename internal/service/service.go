@@ -2,12 +2,13 @@ package service
 
 import (
 	"encoding/json"
-	"log"
 	"strconv"
 	"time"
 	"tinyurl/pkg/database"
 	"tinyurl/pkg/errors"
 	redispkg "tinyurl/pkg/redis"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/go-redis/redis"
 	"gorm.io/gorm"
@@ -46,19 +47,19 @@ func (s *URLGenerateService) CreateURLInfo(urlInfo *UrlInfo) (*UrlInfo, error) {
 	if val, err := s.cache.Get(urlInfo.URL).Result(); err == nil {
 		err := json.Unmarshal([]byte(val), urlInfo)
 		if err != nil {
-			log.Printf("CreateURLInfo : json Unmarshal failed, err: %v", err)
+			log.Warn().Msgf("CreateURLInfo : json Unmarshal failed, err: %v", err)
 		}
 	} else if err != redis.Nil {
-		log.Printf("CreateURLInfo : get data from cache failed, err: %v", err)
+		log.Warn().Msgf("CreateURLInfo : get data from cache failed, err: %v", err)
 	}
 
 	if err := s.db.Where(urlInfo).First(urlInfo).Error; err != nil {
 		if err != gorm.ErrRecordNotFound {
-			log.Printf("CreateURLInfo: Check url in DB failed, err: %v", err)
+			log.Warn().Msgf("CreateURLInfo: Check url in DB failed, err: %v", err)
 		}
 	} else {
 		if err := s.cache.Set(urlInfo.URL, urlInfo.GetJson(), 1*time.Hour).Err(); err != nil {
-			log.Printf("CreateURLInfo : set data to cache failed, err: %v", err)
+			log.Warn().Msgf("CreateURLInfo : set data to cache failed, err: %v", err)
 		}
 		return urlInfo, nil
 	}
@@ -75,12 +76,12 @@ func (s URLGenerateService) GetURLInfo(id int) (*UrlInfo, error) {
 	if val, err := s.cache.Get(strconv.Itoa(id)).Result(); err == nil {
 		err := json.Unmarshal([]byte(val), urlInfo)
 		if err != nil {
-			log.Printf("GetURLInfo : json Unmarshal failed, err: %v", err)
+			log.Warn().Msgf("GetURLInfo : json Unmarshal failed, err: %v", err)
 		} else {
 			return urlInfo, nil
 		}
 	} else if err != redis.Nil {
-		log.Printf("GetURLInfo : get data from cache failed, err: %v", err)
+		log.Warn().Msgf("GetURLInfo : get data from cache failed, err: %v", err)
 	}
 	queryInfo := &UrlInfo{}
 	queryInfo.ID = uint(id)
@@ -91,7 +92,7 @@ func (s URLGenerateService) GetURLInfo(id int) (*UrlInfo, error) {
 	}
 
 	if err := s.cache.Set(strconv.Itoa(id), urlInfo.GetJson(), 1*time.Hour).Err(); err != nil {
-		log.Printf("GetURLInfo : set data to cache failed, err: %v", err)
+		log.Warn().Msgf("GetURLInfo : set data to cache failed, err: %v", err)
 	}
 
 	return urlInfo, nil

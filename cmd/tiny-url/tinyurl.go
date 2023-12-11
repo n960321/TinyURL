@@ -2,17 +2,20 @@ package main
 
 import (
 	"context"
-	"log"
 	"os"
 	"os/signal"
 	"time"
 	"tinyurl/internal/handler"
 	"tinyurl/pkg/database"
+	"tinyurl/pkg/logger"
 	"tinyurl/pkg/redis"
 	"tinyurl/pkg/server"
+
+	"github.com/rs/zerolog/log"
 )
 
 func main() {
+	logger.SetLogger()
 	db := database.NewDatabase()
 	redis := redis.NewRedisCache()
 	svr := server.NewServer(
@@ -31,8 +34,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*15)
 	defer cancel()
 	svr.Shutdown(ctx)
-
-	log.Println("shutting down")
+	log.Info().Msg("shutting down")
 	os.Exit(0)
 
 }

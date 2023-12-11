@@ -2,12 +2,13 @@ package handler
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 	"tinyurl/internal/service"
 	"tinyurl/pkg/base58"
 	"tinyurl/pkg/database"
 	redispkg "tinyurl/pkg/redis"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/gorilla/mux"
 )
@@ -45,10 +46,10 @@ func (h *Handler) create(rw http.ResponseWriter, req *http.Request) {
 	var resp = new(CreateResp)
 	err := json.NewDecoder(req.Body).Decode(&createReq)
 	if err != nil {
-		log.Printf("unmarshall req failed, err: %v", err)
+		log.Warn().Msgf("unmarshall req failed, err: %v", err)
 		return
 	}
-	log.Printf("createReq: %+v\n", createReq)
+	log.Debug().Any("Req", createReq).Msg("create")
 
 	urlInfo := &service.UrlInfo{URL: createReq.Url}
 	urlInfo, err = h.svc.CreateURLInfo(urlInfo)
@@ -56,7 +57,7 @@ func (h *Handler) create(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusOK)
 	respBody, err := json.Marshal(resp)
 	if err != nil {
-		log.Printf("marshal failed, err: %v", err)
+		log.Warn().Msgf("marshal failed, err: %v", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -76,7 +77,7 @@ func (h *Handler) redirection(rw http.ResponseWriter, req *http.Request) {
 
 	urlInfo, err := h.svc.GetURLInfo(id)
 	if err != nil {
-		log.Printf("redirection failed, err: %v", err)
+		log.Warn().Msgf("redirection failed, err: %v", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -100,14 +101,14 @@ func (h *Handler) redirectionWithHttpResp(rw http.ResponseWriter, req *http.Requ
 
 	urlInfo, err := h.svc.GetURLInfo(id)
 	if err != nil {
-		log.Printf("redirection failed, err: %v", err)
+		log.Warn().Msgf("redirection failed, err: %v", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	resp.Url = urlInfo.URL
 	respBody, err := json.Marshal(resp)
 	if err != nil {
-		log.Printf("marshal failed, err: %v", err)
+		log.Warn().Msgf("marshal failed, err: %v", err)
 		rw.WriteHeader(http.StatusInternalServerError)
 		return
 	}

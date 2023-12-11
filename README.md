@@ -216,3 +216,7 @@ OK，也是非常夠用。
 [Educative - Design of a Unique ID Generator](https://www.educative.io/courses/grokking-modern-system-design-interview-for-engineers-managers/design-of-a-unique-id-generator)
 
 [Golang-migrate](https://github.com/golang-migrate/migrate)
+
+[k6 - Testing Tool](https://k6.io/)
+
+[Golang-zerolog](https://github.com/rs/zerolog)
