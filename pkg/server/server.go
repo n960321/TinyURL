@@ -1,10 +1,10 @@
 package server
 
 import (
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/rs/zerolog/log"
 )
 
 type Server struct {
@@ -27,8 +27,9 @@ func NewServer(cfg *Config, handler *mux.Router) *Server {
 
 func (svr *Server) Listen() {
 	go func() {
+		log.Info().Msgf("Server Start Listening")
 		if err := svr.ListenAndServe(); err != nil {
-			log.Fatal(err)
+			log.Fatal().Err(err)
 		}
 	}()
 }

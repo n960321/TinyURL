@@ -1,4 +1,3 @@
-local: true
 http:
   address: "localhost"
   port: "8000"

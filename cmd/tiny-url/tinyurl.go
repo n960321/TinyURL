@@ -18,14 +18,16 @@ import (
 
 var (
 	configFile string
+	local      bool
 )
 
 func main() {
+	flag.BoolVar(&local, "local", false, "Run on local.")
 	flag.StringVar(&configFile, "config", "configs/config.yaml", "The config file.")
 	flag.Parse()
 
+	logger.SetLogger(local)
 	config := config.GetConfig(configFile)
-	logger.SetLogger(*config.Local)
 	db := database.NewDatabase(config.DB)
 	redis := redis.NewRedisCache(config.Cache)
 	svr := server.NewServer(config.Http, handler.NewHandler(db, redis).GetRouter())

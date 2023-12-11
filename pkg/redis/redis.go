@@ -1,6 +1,9 @@
 package redis
 
-import "github.com/go-redis/redis"
+import (
+	"github.com/go-redis/redis"
+	"github.com/rs/zerolog/log"
+)
 
 type RedisCache struct {
 	*redis.Client
@@ -18,6 +21,8 @@ func NewRedisCache(config *Config) *RedisCache {
 		Addr:     *config.Address + ":" + *config.Port,
 		Password: config.Password,
 	})
+
+	log.Info().Msgf("Create Redis Client Successful!")
 
 	return &RedisCache{
 		rdb,

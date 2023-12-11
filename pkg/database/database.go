@@ -2,11 +2,11 @@ package database
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/rs/zerolog/log"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -61,19 +61,20 @@ func NewDatabase(config *Config) *Database {
 	m, err := migrate.New(config.GetMigrateURL(), config.GetDatabaseURL())
 
 	if err != nil {
-		log.Panicf("connect db failed when migrate, err: %v", err)
+		log.Panic().Err(err).Msgf("Connect Database Failed When Migrate")
 	}
 
 	if err := m.Up(); err != nil {
 		if err != migrate.ErrNoChange {
-			log.Panicf("Migrate failed, err %v", err)
+			log.Panic().Err(err).Msgf("Migrate Up failed")
 		}
 	}
 	db, err := gorm.Open(postgres.Open(config.GetDSN()), &gorm.Config{})
 
 	if err != nil {
-		return nil
+		log.Panic().Err(err).Msgf("Connect to Database failed")
 	}
+	log.Info().Msgf("Connect to Database [%v] Successful!", config.GetDSN())
 
 	return &Database{*db}
 }
