@@ -7,7 +7,7 @@ redis-container-id := $(shell docker ps | grep tiny-url-redis | awk '{print $$1}
 postgresql_url := postgres://postgres:admin@localhost:5432/postgres?sslmode=disable
 
 run:
-	go run cmd/tiny-url/tinyurl.go
+	go run cmd/tiny-url/tinyurl.go -config configs/dev.yaml
 
 build:
 	go build -v -o bin/tiny-url ./cmd/tiny-url

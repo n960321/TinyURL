@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"flag"
 	"os"
 	"os/signal"
 	"time"
+	"tinyurl/internal/config"
 	"tinyurl/internal/handler"
 	"tinyurl/pkg/database"
 	"tinyurl/pkg/logger"
@@ -14,17 +16,19 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+var (
+	configFile string
+)
+
 func main() {
-	logger.SetLogger()
-	db := database.NewDatabase()
-	redis := redis.NewRedisCache()
-	svr := server.NewServer(
-		&server.ServerConfig{
-			Address: "0.0.0.0",
-			Port:    "8000",
-		},
-		handler.NewHandler(db, redis).GetRouter(),
-	)
+	flag.StringVar(&configFile, "config", "configs/config.yaml", "The config file.")
+	flag.Parse()
+
+	config := config.GetConfig(configFile)
+	logger.SetLogger(*config.Local)
+	db := database.NewDatabase(config.DB)
+	redis := redis.NewRedisCache(config.Cache)
+	svr := server.NewServer(config.Http, handler.NewHandler(db, redis).GetRouter())
 
 	svr.Listen()
 

@@ -6,14 +6,19 @@ type RedisCache struct {
 	*redis.Client
 }
 
-func NewRedisCache() *RedisCache {
+type Config struct {
+	Address  *string `mapstructure:"address"`
+	Port     *string `mapstructure:"port"`
+	Password string  `mapstructure:"password"`
+}
+
+func NewRedisCache(config *Config) *RedisCache {
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
+		Addr:     *config.Address + ":" + *config.Port,
+		Password: config.Password,
 	})
-	
+
 	return &RedisCache{
 		rdb,
 	}

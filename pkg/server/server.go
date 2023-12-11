@@ -11,15 +11,15 @@ type Server struct {
 	http.Server
 }
 
-type ServerConfig struct {
-	Address string
-	Port    string
+type Config struct {
+	Address *string `mapstructure:"address"`
+	Port    *string `mapstructure:"port"`
 }
 
-func NewServer(cfg *ServerConfig, handler *mux.Router) *Server {
+func NewServer(cfg *Config, handler *mux.Router) *Server {
 	return &Server{
 		http.Server{
-			Addr: cfg.Address + ":" + cfg.Port,
+			Addr:    *cfg.Address + ":" + *cfg.Port,
 			Handler: handler,
 		},
 	}
