@@ -1,0 +1,12 @@
+FROM golang:1.19-alpine 
+RUN apk add --no-cache --update alpine-sdk
+
+WORKDIR /TinyURL
+COPY . .
+
+RUN go mod download
+RUN make build
+
+EXPOSE 8080
+
+CMD ["./bin/tiny-url", "-config","configs/config.yaml"]

@@ -27,7 +27,7 @@ func NewServer(cfg *Config, handler *mux.Router) *Server {
 
 func (svr *Server) Listen() {
 	go func() {
-		log.Info().Msgf("Server Start Listening")
+		log.Info().Msgf("Server Start Listening on %s",svr.Addr)
 		if err := svr.ListenAndServe(); err != nil {
 			log.Fatal().Err(err)
 		}
