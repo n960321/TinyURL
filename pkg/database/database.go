@@ -71,16 +71,17 @@ func NewDatabase(config *Config) *Database {
 			log.Panic().Err(err).Msgf("Migrate Up failed")
 		}
 	}
-	db, err := gorm.Open(postgres.Open(config.GetDSN()), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(config.GetDSN()), &gorm.Config{
+		Logger: New(logger.Config{
+			SlowThreshold: 200 * time.Millisecond,
+			Colorful:      true,
+			LogLevel:      logger.Info,
+		}),
+	})
 
 	if err != nil {
 		log.Panic().Err(err).Msgf("Connect to Database failed")
 	}
-	db.Logger = New(logger.Config{
-		SlowThreshold: 200 * time.Millisecond,
-		Colorful:      true,
-		LogLevel:      logger.Info,
-	})
 	log.Info().Msgf("Connect to Database [%v] Successful!", config.GetDSN())
 
 	return &Database{*db}
