@@ -2,6 +2,7 @@ package database
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -9,6 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 type Database struct {
@@ -74,6 +76,11 @@ func NewDatabase(config *Config) *Database {
 	if err != nil {
 		log.Panic().Err(err).Msgf("Connect to Database failed")
 	}
+	db.Logger = New(logger.Config{
+		SlowThreshold: 200 * time.Millisecond,
+		Colorful:      true,
+		LogLevel:      logger.Info,
+	})
 	log.Info().Msgf("Connect to Database [%v] Successful!", config.GetDSN())
 
 	return &Database{*db}
