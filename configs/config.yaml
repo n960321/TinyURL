@@ -1,5 +1,4 @@
 http:
-  address: "localhost"
   port: "8080"
 db:
   type: "postgres"

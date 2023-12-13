@@ -1,4 +1,4 @@
-FROM golang:1.19-alpine 
+FROM golang:1.19-alpine as builder
 RUN apk add --no-cache --update alpine-sdk
 
 WORKDIR /TinyURL
@@ -7,6 +7,13 @@ COPY . .
 RUN go mod download
 RUN make build
 
+
+FROM alpine:3.19
+
+WORKDIR /app/
+
+COPY --from=builder /TinyURL/bin .
 EXPOSE 8080
 
-CMD ["./bin/tiny-url", "-config","configs/config.yaml"]
+CMD ["/app/tiny-url"]
+

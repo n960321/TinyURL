@@ -1,19 +1,35 @@
-.PHONY: run build tidy db-run db-remove db-migrate-up db-migrate-down
+.PHONY: run build tidy db-run db-remove db-migrate-up db-migrate-down k6-test docker-build docker-remove
 
 db-container-id := $(shell docker ps | grep tiny-url-db | awk '{print $$1}')
 
 redis-container-id := $(shell docker ps | grep tiny-url-redis | awk '{print $$1}')
 
+tiny-url-container-id := $(shell docker ps | grep n960321/tiny-url | awk '{print $$1}')
+
 postgresql_url := postgres://postgres:admin@localhost:5432/postgres?sslmode=disable
+
+cur := $(shell pwd)
 
 run:
 	@go run cmd/tiny-url/tinyurl.go -config configs/dev.yaml -local true
 
 build:
-	go build -v -o bin/tiny-url ./cmd/tiny-url
+	@go build -v -o bin/tiny-url ./cmd/tiny-url
 
 tidy:
-	go mod tidy
+	@go mod tidy
+
+docker-build:
+	@docker build --tag n960321/tiny-url:latest --file build/dockerfile .
+
+docker-run:
+	@docker run --name tiny-url \
+	-p 8080:8080 \
+	--link tiny-url-db:tiny-url-db \
+	--link tiny-url-redis:tiny-url-cache \
+	--volume $(cur)/configs:/app/configs \
+	--volume $(cur)/deployment:/app/deployment \
+	n960321/tiny-url
 
 db-remove:
 	docker rm -f $(db-container-id)
