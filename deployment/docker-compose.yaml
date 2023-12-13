@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  tiny-url:
+    image: n960321/tiny-url:latest
+    ports: 
+      - 8080:8080
+    volumes: 
+      - /Users/h_xian/Documents/playground/TinyURL/configs:/app/configs
+      - /Users/h_xian/Documents/playground/TinyURL/deployment:/app/deployment
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:15.5-alpine
+    ports: 
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=admin
+
+  redis:
+    image: redis:7.2.3-alpine
+    ports: 
+      - 6379:6379

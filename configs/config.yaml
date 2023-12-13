@@ -2,7 +2,7 @@ http:
   port: "8080"
 db:
   type: "postgres"
-  host: "tiny-url-db"
+  host: "postgres"
   port: 5432
   user: "postgres"
   password: "admin"
@@ -10,5 +10,5 @@ db:
   ssl_mode: "disable"
   migrate_path: "deployment/database/migrations"
 cache:
-  address: "tiny-url-cache"
+  address: "redis"
   port: "6379"
