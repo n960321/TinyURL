@@ -8,6 +8,7 @@ import (
 	"tinyurl/pkg/database"
 	redispkg "tinyurl/pkg/redis"
 
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog/log"
 
 	"github.com/gorilla/mux"
@@ -25,6 +26,7 @@ func NewHandler(db *database.Database, cache *redispkg.RedisCache) *Handler {
 
 func (h *Handler) GetRouter() *mux.Router {
 	r := mux.NewRouter()
+	r.Path("/metrics").Handler(promhttp.Handler())
 	r.Use(loggingMiddleware)
 	r.HandleFunc("/{url_key}", h.redirection).Methods(http.MethodGet)
 

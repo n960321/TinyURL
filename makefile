@@ -48,3 +48,6 @@ cache-run:
 
 cache-remove:
 	docker rm -f $(redis-container-id)
+
+prometheus-run:
+	docker run -d --name prometheus -p 9090:9090 -v /Users/h_xian/Documents/playground/TinyURL/deployment/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus:v2.48.1

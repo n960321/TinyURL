@@ -1,0 +1,6 @@
+scrape_configs:
+  - job_name: tiny-url
+    scrape_interval: 5s
+    static_configs:
+      - targets:
+        - tiny-url:8080
