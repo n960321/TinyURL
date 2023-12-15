@@ -9,6 +9,8 @@ db:
   db_name: "postgres"
   ssl_mode: "disable"
   migrate_path: "deployment/database/migrations"
+  max_idle_conns: 10
+  max_open_conns: 1000
 cache:
   address: "redis"
   port: "6379"

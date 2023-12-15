@@ -28,7 +28,7 @@ func main() {
 
 	logger.SetLogger(local)
 	config := config.GetConfig(configFile)
-	db := database.NewDatabase(config.DB)
+	db := database.NewDatabase(config.DB,local)
 	redis := redis.NewRedisCache(config.Cache)
 	svr := server.NewServer(config.Http, handler.NewHandler(db, redis).GetRouter())
 

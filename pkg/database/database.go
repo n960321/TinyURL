@@ -18,14 +18,16 @@ type Database struct {
 }
 
 type Config struct {
-	Type        *string `mapstructure:"type"`
-	Host        *string `mapstructure:"host"`
-	Port        *int    `mapstructure:"port"`
-	User        *string `mapstructure:"user"`
-	Password    *string `mapstructure:"password"`
-	DBName      *string `mapstructure:"db_name"`
-	SslMode     *string `mapstructure:"ssl_mode"`
-	MigratePath *string `mapstructure:"migrate_path"`
+	Type         *string `mapstructure:"type"`
+	Host         *string `mapstructure:"host"`
+	Port         *int    `mapstructure:"port"`
+	User         *string `mapstructure:"user"`
+	Password     *string `mapstructure:"password"`
+	DBName       *string `mapstructure:"db_name"`
+	SslMode      *string `mapstructure:"ssl_mode"`
+	MigratePath  *string `mapstructure:"migrate_path"`
+	MaxIdleConns *int    `mapstructure:"max_idle_conns"`
+	MaxOpenConns *int    `mapstructure:"max_open_conns"`
 }
 
 func (c *Config) GetMigrateURL() string {
@@ -59,7 +61,7 @@ func (c *Config) GetDSN() string {
 	return ""
 }
 
-func NewDatabase(config *Config) *Database {
+func NewDatabase(config *Config, isLocal bool) *Database {
 	m, err := migrate.New(config.GetMigrateURL(), config.GetDatabaseURL())
 
 	if err != nil {
@@ -74,7 +76,7 @@ func NewDatabase(config *Config) *Database {
 	db, err := gorm.Open(postgres.Open(config.GetDSN()), &gorm.Config{
 		Logger: New(logger.Config{
 			SlowThreshold: 200 * time.Millisecond,
-			Colorful:      true,
+			Colorful:      isLocal,
 			LogLevel:      logger.Info,
 		}),
 	})
@@ -82,6 +84,11 @@ func NewDatabase(config *Config) *Database {
 	if err != nil {
 		log.Panic().Err(err).Msgf("Connect to Database failed")
 	}
+
+	sqlDB, _ := db.DB()
+	sqlDB.SetMaxIdleConns(*config.MaxIdleConns)
+	sqlDB.SetMaxOpenConns(*config.MaxOpenConns)
+
 	log.Info().Msgf("Connect to Database [%v] Successful!", config.GetDSN())
 
 	return &Database{*db}

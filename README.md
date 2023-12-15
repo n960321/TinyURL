@@ -220,3 +220,5 @@ OK，也是非常夠用。
 [k6 - Testing Tool](https://k6.io/)
 
 [Golang-zerolog](https://github.com/rs/zerolog)
+
+[PLG Setup](https://ruanbekker.medium.com/logging-with-docker-promtail-and-grafana-loki-d920fd790ca8)
